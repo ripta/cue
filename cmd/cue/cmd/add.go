@@ -26,7 +26,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/format"
 	"cuelang.org/go/cue/load"
@@ -174,12 +173,12 @@ func doAdd(cmd *Command, args []string) (err error) {
 		if b.Err != nil {
 			return b.Err
 		}
-		i := cue.Build([]*build.Instance{b})[0]
-		if i.Err != nil {
-			return i.Err
+		i := cmd.ctx.BuildInstance(b)
+		if err := i.Err(); err != nil {
+			return err
 		}
-		if err := i.Value().Validate(); err != nil {
-			return i.Err
+		if err := i.Validate(); err != nil {
+			return err
 		}
 	}
 
@@ -252,9 +251,9 @@ func initFile(cmd *Command, file string, getBuild func(path string) *build.Insta
 		if err != nil {
 			return nil, err
 		}
-		if _, pkgName, _ := internal.PackageInfo(f); pkgName != "" {
-			if pkg := flagPackage.String(cmd); pkg != "" && pkgName != pkg {
-				return nil, fmt.Errorf("package mismatch (%s vs %s) for file %s", pkgName, pkg, file)
+		if info := internal.GetPackageInfo(f); info.Package != nil && info.Name != "" {
+			if pkg := flagPackage.String(cmd); pkg != "" && info.Name != pkg {
+				return nil, fmt.Errorf("package mismatch (%s vs %s) for file %s", info.Name, pkg, file)
 			}
 			todo.build = getBuild(dir)
 		} else {

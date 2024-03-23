@@ -309,7 +309,7 @@ func applyCursor(v applyVisitor, c Cursor) {
 
 	// TODO: record the comment groups and interleave with the values like for
 	// parsing and printing?
-	comments := node.Comments()
+	comments := ast.Comments(node)
 	for _, cm := range comments {
 		apply(v, c, &cm)
 	}
@@ -462,7 +462,7 @@ func (f *applier) Before(c Cursor) applyVisitor {
 	node := c.Node()
 	if f.before == nil || (f.before(c) && node == c.Node()) {
 		f.commentStack = append(f.commentStack, f.current)
-		f.current = commentFrame{cg: node.Comments()}
+		f.current = commentFrame{cg: ast.Comments(node)}
 		f.visitComments(c, f.current.pos)
 		return f
 	}
